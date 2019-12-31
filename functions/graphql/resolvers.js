@@ -1,42 +1,71 @@
 exports.resolvers = {
-  Pokemon: {
-    isVeryBest: (obj, args, context) => {
-      return obj.id === 122;
-    }
-  },
   Query: {
     hello: (obj, args, context) => {
-      return 'Hello, world!';
+      return 'Hello, FaunaDB world!';
     },
     allPokemon: (obj, args, context) => {
-      return context.db;
+      const { client, query: q } = context;
+      return client
+        .query(
+          q.Map(
+            q.Paginate(q.Match(q.Index('allPokemon')), {
+              size: 256
+            }),
+            q.Lambda('ref', q.Select(['data'], q.Get(q.Var('ref'))))
+          )
+        )
+        .then(result => result.data);
     },
     pokemonById: (obj, args, context) => {
-      return context.db.find(pokemon => pokemon.id === args.id);
+      const { client, query: q } = context;
+      return client
+        .query(q.Get(q.Match(q.Index('pokemonById'), args.id)))
+        .then(result => result.data);
     },
     pokemonByName: (obj, args, context) => {
-      return context.db.find(pokemon => pokemon.name === args.name);
+      const { client, query: q } = context;
+      return client
+        .query(q.Get(q.Match(q.Index('pokemonByName'), args.name)))
+        .then(result => result.data);
     }
   },
   Mutation: {
     createPokemon: (obj, args, context) => {
-      const pokemon = {
-        id: args.id,
-        name: args.name
-      };
-      context.db.push(pokemon);
-      return pokemon;
+      const { client, query: q } = context;
+      return client
+        .query(
+          q.Create(q.Collection('Pokemon'), {
+            data: { id: args.id, name: args.name }
+          })
+        )
+        .then(result => result.data);
     },
     updatePokemon: (obj, args, context) => {
-      const pokemon = context.db.find(pokemon => pokemon.id === args.id);
-      if (args.name) pokemon.name = args.name;
-      return pokemon;
+      const { client, query: q } = context;
+      return client
+        .query(
+          q.Update(
+            q.Select(['ref'], q.Get(q.Match(q.Index('pokemonById'), args.id))),
+            { data: { name: args.name } }
+          )
+        )
+        .then(result => result.data);
     },
     deletePokemon: (obj, args, context) => {
-      const index = context.db.findIndex(pokemon => pokemon.id === args.id);
-      const pokemon = context.db[index];
-      context.db.splice(index, 1);
-      return pokemon;
+      const { client, query: q } = context;
+      return client
+        .query(
+          q.Delete(
+            q.Select(['ref'], q.Get(q.Match(q.Index('pokemonById'), args.id)))
+          )
+        )
+        .then(result => result.data);
+    }
+  },
+  Pokemon: {
+    isVeryBest: (obj, args, context) => {
+      // is it Mr. Mime?
+      return obj.id === 122;
     }
   }
 };

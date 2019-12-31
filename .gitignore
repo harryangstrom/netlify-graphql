@@ -48,3 +48,6 @@ Thumbs.db
 
 # Fichero de datos netlify
 netlify_data.txt
+
+# Fichero .env
+.env
