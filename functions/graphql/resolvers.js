@@ -19,8 +19,8 @@ exports.resolvers = {
     pokemonById: (obj, args, context) => {
       const { client, query: q } = context;
       return client
-        .query(q.Get(q.Match(q.Index('pokemonById'), args.id)))
-        .then(result => result.data);
+        .query(q.Get(q.Match(q.Index('PokemonById'), args.id)))
+        .then((result) => result.data);
     },
     pokemonByName: (obj, args, context) => {
       const { client, query: q } = context;
@@ -45,7 +45,7 @@ exports.resolvers = {
       return client
         .query(
           q.Update(
-            q.Select(['ref'], q.Get(q.Match(q.Index('pokemonById'), args.id))),
+            q.Select(['ref'], q.Get(q.Match(q.Index('PokemonById'), args.id))),
             { data: { name: args.name } }
           )
         )
@@ -56,7 +56,7 @@ exports.resolvers = {
       return client
         .query(
           q.Delete(
-            q.Select(['ref'], q.Get(q.Match(q.Index('pokemonById'), args.id)))
+            q.Select(['ref'], q.Get(q.Match(q.Index('PokemonById'), args.id)))
           )
         )
         .then(result => result.data);
